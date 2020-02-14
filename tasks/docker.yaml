@@ -1,0 +1,29 @@
+---
+
+
+- name: check if docker works
+  command: docker -v
+  register: result
+  ignore_errors: True
+
+- name: get installation script
+  shell: curl -fsSL https://get.docker.com -o get-docker.sh
+  when: result is failed
+
+- name: install docker
+  become: yes
+  shell: sh get-docker.sh
+  when: result is failed
+
+- name: add user to docker group
+  become: yes
+  user:
+    name: "{{ ansible_user_id }}"
+    groups: docker
+    append: yes
+  when: result is failed
+
+- name: remove installaton script
+  file: 
+    path: ~/get-docker.sh
+    state: absent

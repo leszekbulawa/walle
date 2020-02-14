@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  reverse-proxy:
+    image: traefik:2.1.4
+    command: --api.insecure=true --providers.docker
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+  znc:
+    image: znc:1.7.5
+    args: ["--entryPoints.web.address=:80", "--entryPoints.websecure.address=:443"]
+    ports:
+      - "6697:6697"
+    volumes:
+      - ./znc-data:/znc-data
+    labels:
+      - "traefik.http.routers.whoami.rule=Host(`znc.walle`)"
+    restart: always
+  db:
+    image: mariadb
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    volumes:
+      - db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_PASSWORD=
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+    restart: always
+  nextcloud:
+    image: nextcloud:18.0.1-fpm
+    volumes:
+      - ./nextcloud/html:/var/www/html
+      - ./nextcloud/custom_apps:/var/www/html/custom_apps
+      - ./nextcloud/config:/var/www/html/config
+      - ./nextcloud/data:/var/www/html/data
+    restart: always
+  web:
+    image: nginx:1.17.8
+    ports:
+      - 8080:80
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    volumes_from:
+      - nextcloud

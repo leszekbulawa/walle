@@ -1,0 +1,8 @@
+---
+
+
+- hosts: walle
+  tasks:
+    - include: tasks/packages.yaml
+    - include: tasks/ohmyzsh.yaml
+    - include: tasks/docker.yaml

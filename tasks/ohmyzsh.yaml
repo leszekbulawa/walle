@@ -1,0 +1,17 @@
+---
+
+
+- name: check if oh-my-zsh is installed
+  stat: 
+    path: ~/.oh-my-zsh
+  register: ohmyzsh_installed
+
+- name: install ohmyzsh
+  shell: sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  when: ohmyzsh_installed.stat.exists == false
+
+- name: change shell to zsh
+  become: yes
+  user:
+    name: "{{ ansible_user_id }}"
+    shell: /bin/zsh
